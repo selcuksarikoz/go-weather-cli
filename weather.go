@@ -26,7 +26,6 @@ const forecastTemplate = `Generate a precise %d-day weather forecast for %s star
 Location: %[2]s | 📍 [Google Maps URL: https://maps.google.com/?q=%[2]s]
 🌿 Pollen Alert: [Current pollen types & intensity]
 
-------------------------------------------------------------------
 [Day X]
 📅 [Weekday, Month DD] (Calculated from %[4]s + X days) [Weather Emoji] 
 🌡 [Min]°C to [Max]°C | ☔ [Percip]%% | 💨 [Wind]km/h [Direction]
@@ -81,9 +80,11 @@ type ChatReqBody struct {
 }
 
 func main() {
-	url := "https://openrouter.ai/api/v1/chat/completions"
+	// url := "https://openrouter.ai/api/v1/chat/completions"
+	url := "https://api.together.xyz/v1/chat/completions"
 	apiKey := ""
-	currentDate := time.Now()
+	currentDate := time.Now().Format("2006-01-02")
+
 	// Get command line arguments
 	args := os.Args[1:]
 
@@ -111,15 +112,6 @@ func main() {
 		days = 3
 	}
 
-	// fmt.Println("Enter the city or country you're interested in (default Berlin :)):")
-	// var userInput string = "Berlin"
-	// fmt.Scanln(&userInput)
-
-	// fmt.Println("Response language (default English):")
-	// var language string = "English"
-	// fmt.Scanln(&language)
-
-	// Conversation between assistant and user
 	messages := []Message{
 		{
 			Role: "user",
@@ -139,7 +131,7 @@ func main() {
 	}
 
 	chatRequestBody := ChatReqBody{
-		Model:    "google/gemini-2.0-flash-thinking-exp-1219:free",
+		Model:    "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
 		Messages: messages,
 		Stream:   true,
 	}
@@ -157,6 +149,8 @@ func main() {
 		return
 	}
 	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("HTTP-Referer", "https://www.selcuksarikoz.com")
+	req.Header.Add("X-Title", "go-weather-cli")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiKey))
 
 	resp, err := client.Do(req)
@@ -164,14 +158,14 @@ func main() {
 		fmt.Println("Error making request:", err)
 		return
 	}
-
 	defer resp.Body.Close()
 
 	fmt.Println("Thinking...")
 
+	// Check for HTTP errors first
 	if resp.StatusCode != http.StatusOK {
 		body, _ := io.ReadAll(resp.Body)
-		fmt.Printf("Error: Status %d, Response: %s\n", resp.StatusCode, string(body))
+		fmt.Printf("\nError: Status %d, Response: %s\n", resp.StatusCode, string(body))
 		return
 	}
 
@@ -198,7 +192,7 @@ func main() {
 				firstChoice := choices[0].(map[string]interface{})
 				if delta, ok := firstChoice["delta"].(map[string]interface{}); ok {
 					if content, ok := delta["content"].(string); ok {
-						fmt.Print(content) // Print streamed content
+						fmt.Print(content)
 						fullResponse.WriteString(content)
 					}
 				}
@@ -211,7 +205,5 @@ func main() {
 		return
 	}
 
-	// Print the final formatted response
-	// fmt.Println("\n\nFinal Weather Forecast:")
-	// fmt.Println(fullResponse.String())
+	fmt.Println("\n\nForecast complete!")
 }
