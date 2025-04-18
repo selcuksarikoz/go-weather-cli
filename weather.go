@@ -80,11 +80,6 @@ type ChatReqBody struct {
 }
 
 func main() {
-	// url := "https://openrouter.ai/api/v1/chat/completions"
-	url := "https://api.together.xyz/v1/chat/completions"
-	apiKey := ""
-	currentDate := time.Now().Format("2006-01-02")
-
 	// Get command line arguments
 	args := os.Args[1:]
 
@@ -109,8 +104,13 @@ func main() {
 	if len(args) > 2 {
 		days, _ = strconv.Atoi(args[2])
 	} else {
-		days = 3
+		days = 2
 	}
+
+	// url := "https://openrouter.ai/api/v1/chat/completions"
+	url := "https://api.together.xyz/v1/chat/completions"
+	apiKey := ""
+	currentDate := time.Now().Format("2006-01-02")
 
 	messages := []Message{
 		{
