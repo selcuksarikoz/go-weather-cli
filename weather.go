@@ -10,43 +10,53 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
-const forecastTemplate = `Provide a detailed %d-day weather forecast for %s with specific activity suggestions.
+const forecastTemplate = `Generate a precise %d-day weather forecast for %s starting from %s with hyper-localized activity recommendations.
 
 === RESPONSE REQUIREMENTS ===
-* Plain text ONLY - NO markdown, code blocks, or JSON
-* Optimized for terminal display (max 140 chars/line)
+* STRICT plain text format (NO markdown, JSON, or code blocks)
+* Terminal-optimized (max 138 characters/line)
+* Use ONLY these weather emojis: ☀️🌤️⛅🌥️☁️🌦️🌧️⛈️🌨️💨🌫️
+* Include real-time weather anomalies if present
+* Date calculations MUST start from %[4]s (YYYY-MM-DD)
 
-=== WEATHER FORMAT ===
-Location: %[2]s
+=== WEATHER DATA FORMAT ===
+Location: %[2]s | 📍 [Google Maps URL: https://maps.google.com/?q=%[2]s]
+🌿 Pollen Alert: [Current pollen types & intensity]
 
-[Day 1]
-📅 Tuesday, June 4 ☀️
-🌡 18°C to 24°C | ☔ 10%%%% rain | 💨 10km/h wind
-☀️ UV Index: 6 (High)
-👕 Wear: Light clothing, sunglasses
-🎡 Activity 1: Tempelhofer Feld sunset picnic
-🏛 Activity 2: Pergamon Museum new exhibition
-🍻 Activity 3: Rooftop bar at Klunkerkranich
+------------------------------------------------------------------
+[Day X]
+📅 [Weekday, Month DD] (Calculated from %[4]s + X days) [Weather Emoji] 
+🌡 [Min]°C to [Max]°C | ☔ [Percip]%% | 💨 [Wind]km/h [Direction]
+🌞 UV Index: [Value] ([Level]) | 🌙 Overnight: [Temp]°C
+👕 Wear: [Clothing items]
+🎩 Fancy Tip: [Humorous fashion suggestion] 
+🤣 Local Quirk: [Amusing local dressing observation]
+🤧 Allergy: [Pollen advice]
 
-=== RULES ===
-1. For EACH of %[1]d days:
-   - Date with emoji
-   - Temperature range with unit
-   - Precipitation chance (use %%%%)
-   - Wind speed
-   - UV index if available
-   - MAX 3 specific activities
-   - Practical clothing/items advice
+🏙️ Activity 1: [Specific venue/event] ([Indoor/Outdoor])  
+📍 [Google Maps: https://maps.google.com/?q=[Venue+Name]]  
+🎨 Activity 2: [Current exhibition/performance]  
+📍 [Google Maps: https://maps.google.com/?q=[Exhibition+Venue]]  
+🍽️ Activity 3: [Weather-appropriate dining]  
+📍 [Google Maps: https://maps.google.com/?q=[Restaurant+Name]]  
+------------------------------------------------------------------
 
-2. Activities MUST:
-   - Name actual places in %[2]s
-   - Match weather conditions
-   - Include both indoor/outdoor options
-   - Mention current events if available
-
-3. Language: %[3]s`
+=== STRICT RULES ===
+1. Date calculations MUST begin from %[4]s for all day forecasts
+2. Humorous additions MUST:
+   - Be culturally appropriate for %[2]s
+   - Reference local fashion stereotypes or weather quirks
+   - Never exceed 2 lines (max 138 chars each)
+3. Activities MUST:  
+   - Include VERIFIABLE venues/events in %[2]s  
+   - Provide DIRECT Google Maps links  
+   - Specify travel method (e.g., "10-min walk from [Station]")  
+4. Weather-dependent adjustments REQUIRED
+5. Language: %[3]s (with local idioms where funny)
+`
 
 type Message struct {
 	Role    string    `json:"role"`
@@ -73,7 +83,7 @@ type ChatReqBody struct {
 func main() {
 	url := "https://openrouter.ai/api/v1/chat/completions"
 	apiKey := ""
-
+	currentDate := time.Now()
 	// Get command line arguments
 	args := os.Args[1:]
 
@@ -118,9 +128,10 @@ func main() {
 					Type: "text",
 					Text: fmt.Sprintf(
 						forecastTemplate,
-						days,      // %[1]d → days (integer)
-						userInput, // %[2]s → location (string)
-						language,  // %[3]s → language (string)
+						days,
+						userInput,
+						language,
+						currentDate,
 					),
 				},
 			},
