@@ -72,7 +72,7 @@ type ChatReqBody struct {
 
 func main() {
 	url := "https://openrouter.ai/api/v1/chat/completions"
-	apiKey := "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"
+	apiKey := ""
 
 	// Get command line arguments
 	args := os.Args[1:]
