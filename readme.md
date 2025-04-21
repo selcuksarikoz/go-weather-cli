@@ -97,4 +97,4 @@ The forecast includes for each day:
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file (create one if needed)
+MIT License - see [LICENSE](LICENSE)
